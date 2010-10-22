@@ -28,11 +28,12 @@ class SlitScanner:
 		self.frame_count = 0
 		self.slit_count = 0
 		self.overwrite = True
-		self.filetype = "PNG"
+		self.filetype = "JPEG"
 		self.extensions = {
 			"PNG":"png",
 			"JPEG":"jpg",
 			"TIFF":"tif" }
+		self.quality = 98
 
 	def setOverwriteExisting(b):
 		self.overwrite = b
@@ -45,6 +46,9 @@ class SlitScanner:
 
 	def setSlitWidth(self, w):
 		self.slitWidth = w
+
+	def setJPEGQuality(self, q):
+		self.quality = q
 
 	def setSize(self, w, h):
 		self.width = w
@@ -77,13 +81,16 @@ class SlitScanner:
 			(self.slit_count * self.slitWidth, 0,
 			 self.slit_count * self.slitWidth + self.slitWidth, self.height ) )
 			 
-		if self.slit_count * self.slitWidth > self.width:
+		if (self.slit_count + 1) * self.slitWidth >= self.width:
 			scan_file = "%s/%d/%d/%06d.%s" % \
 				(self.path, self.slitWidth, self.width,
 				self.img_count, self.extensions[self.filetype])
 			myutils.createPath(scan_file)
 			print "saving file:", scan_file
-			self.scan_img.save(scan_file,"JPEG")
+			if self.filetype == "JPEG":
+				self.scan_img.save(scan_file,self.filetype,quality=self.quality)
+			else:
+				self.scan_img.save(scan_file,self.filetype)
 			self.scan_img = Image.new("RGB",(self.width,self.height),(255,255,255))
 			self.img_count +=1
 			self.slit_count = 0
@@ -103,12 +110,22 @@ class SlitScanner:
 	def getImage(self):
 		return self.scan_img
 
+	def getPixelInImage(self):
+		return (self.slit_count + 1)
+
+	def getPixelInScan(self):
+		return (self.img_count - 1)  * self.width + (self.slit_count + 1)
+		
 	def fileExists(self):
-		scan_file = "%s/%d/%d/%06d.jpg" % (self.path, self.slitWidth, self.width, self.img_count)
+		scan_file = "%s/%d/%d/%06d.%s" % \
+				(self.path, self.slitWidth, self.width,
+				self.img_count, self.extensions[self.filetype])
 		return os.path.exists(scan_file)
 		
 	def saveImage(self):
-		scan_file = "%s/%d/%d/%06d.jpg" % (self.path, self.slitWidth, self.width, self.img_count)
+		scan_file = "%s/%d/%d/%06d.%s" % \
+				(self.path, self.slitWidth, self.width,
+				self.img_count, self.extensions[self.filetype])
 		myutils.createPath(scan_file)
 		print "saving file:", scan_file
 		self.scan_img.save(scan_file,"JPEG")

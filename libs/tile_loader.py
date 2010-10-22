@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #######################################
 #
-# load osm-like tiles for a given lat/lon
-# from wms or local cache
+# load google-style tiles for a given lat/lon
+# from internet or local cache
 #
 # author:(c) Michael Aschauer <m AT ash.to>
 # www: http:/m.ash.to
@@ -32,11 +32,14 @@ class TileLoader:
 			"PNG":"png",
 			"JPEG":"jpg",
 			"TIFF":"tif" }
+		self.quality = 98
 		
-
 	def setSize(self, w, h):
 		self.w = w
 		self.h = h
+
+	def setJPEGQuality(self, q):
+		self.qualtiy = q
 
 	def setCacheDir(self, dir):
 		self.cache_path = dir
@@ -52,6 +55,7 @@ class TileLoader:
 
 	def setRetryCount(self, i):
 		self.retry = 3
+		# not yet implemented
 		
 	def loadTile(self,z,tx,ty):
 		
@@ -66,19 +70,22 @@ class TileLoader:
 			ready = False
 			while not ready:
 				try:
-					print "downloading to", filecache, "..."
+					print "download", filecache, "to cache..."
 					tmp = urllib.urlretrieve(url)
 					img = Image.open(tmp[0]);
-					myutils.createPath(filecache)
 					if self.source == "landsat":
-						img = img.resize((self.tileSize, self.tileSize), Image.ANTIALIAS)
-					img.save(filecache, self.filetype)
+						img = img.resize((256,256),Image.ANTIALIAS)
+					myutils.createPath(filecache)
+					if self.filetype != "JPEG":
+						img.save(filecache, self.filetype)
+					else:
+						img.save(filecache, self.filetype, quality=self.quality)
 					ready = True
 				except KeyboardInterrupt:
 					exit(0)
-				except:
-					print "Unexpected error: %s" % sys.exc_info()[0]
-					ready = False
+				#except:
+				#	print "Unexpected error: %s" % sys.exc_info()[0]
+				#	ready = False
 		return img
 
 	def loadTileSet(self, lat,lon):

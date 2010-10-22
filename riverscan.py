@@ -19,8 +19,8 @@ import sys, os
 import getopt
 
 # current setting
-# for landsat: 20m, zoom=11, lw=1
-# for google: 20m, zoom=13, lw=2
+# for landsat: 20m, zoom=12, lw=1
+# for google: 10m, zoom=13, lw=1
 name = "noname"
 size = (512,512)
 lh = 1
@@ -29,9 +29,9 @@ interval = 20
 zoom = 11
 overwriteExisting = False
 output = "scan"
-trackfile = None
+trackfiles = []
 display = True
-format = "PNG"
+format = "JPEG"
 write_log_files = True
 process_images = True
 cache_only = False
@@ -39,7 +39,7 @@ cache_only = False
 
 def usage():
 	print """
-usage: riverscan.py -i TRACKFILE.gpx [options]
+usage: riverscan.py -i TRACKFILE.gpx [-i FILE.gpx ..] [options]
 
 linescan over map data along a gps track
 
@@ -50,7 +50,7 @@ options:
     -o, --output=PATH       output path
     -z, --zoom=ZOOM         zoom setting
     -l, --lineheight=LH     lineheight of scan line
-    -m, --interval=METERS   interpolate track to interval in meters
+    -m, --interval=METERS   interpolate track to interval in meters (0=off)
     -x, --width=WIDTH       width of output tiles
     -y, --height=HEIGHT     height if output tiles
     -s, --source=SOURCE     source map ["landsat","google_sat"]
@@ -64,7 +64,7 @@ options:
 """
 
 def process_args():
-	global trackfile, interval, zoom, source, size
+	global trackfiles, interval, zoom, source, size
 	global output, overwriteExisting, lh, name
 	global display, format
 	global process_images, write_log_files, cache_only
@@ -89,7 +89,7 @@ def process_args():
 		elif o in ("-o", "--output"):
 			output = a
 		elif o in ("-i", "--input"):
-			trackfile = a
+			trackfiles.append(a)
 		elif o in ("-z", "--zoom"):
 			zoom = int(a)
 		elif o in ("-s", "--source"):
@@ -123,7 +123,7 @@ def process_args():
 		else:
 			assert False, "unhandled option"
 
-	if trackfile == None:
+	if len(trackfiles) == 0:
 		print "trackfile required."
 		usage()
 		sys.exit(2)
@@ -137,17 +137,9 @@ if __name__ == '__main__':
 		import cv
 		cv.NamedWindow("current")
 		cv.NamedWindow("scan")
-	
-	track = TrackWalker()
-	print "loading track", trackfile
-	track.load(trackfile)
-	print "track points: %d, length: %0.2fkm" %( track.getPointNumber(),track.getTotalDistance())
-	
-	if interval > 0:
-		print "interpolating points at",interval,"meters ..."
-		track.interpolate(interval,True)
-		print "track points: %d, length: %0.2fkm" %( track.getPointNumber(),track.getTotalDistance())
 
+	track = TrackWalker()
+	
 	imgloader = TileLoader()
 	imgloader.setSource(source)		
 	imgloader.setZoom(zoom)
@@ -158,13 +150,23 @@ if __name__ == '__main__':
 	print "scan to", scan_path
 	
 	slitscanner = SlitScanner(lh)
+	slitscanner.setFileType(format)
 	slitscanner.setPath(scan_path + "/" + source)
-	slitscanner.setSize(size[0],size[1])
-		
-	while track.goToNext():
-		
+	slitscanner.setSize(size[0],size[1])	
 
-		if (True):
+	for trackfile in trackfiles:
+		
+		print "loading track", trackfile
+		track.load(trackfile)
+		print "track points: %d, length: %0.2fkm" %( track.getPointNumber(),track.getTotalDistance())
+	
+		if interval > 0:
+			print "interpolating points at",interval,"meters ..."
+			track.interpolate(interval,True)
+			print "track points: %d, length: %0.2fkm" %( track.getPointNumber(),track.getTotalDistance())
+		
+		while track.goToNext():
+		
 			percent = float(track.getPointId()) / float(track.getPointNumber()) * 100
 			
 			print "%0.2f%%, #%06d, %0.6f, %0.6f, bearing: %0.3f, distance: %0.0fm, total: %0.1fkm" % \
@@ -172,7 +174,8 @@ if __name__ == '__main__':
 				track.getBearing(), track.getDistanceToLast(), track.getDistance()/1000 )
 
 			if cache_only or process_images:
-				img = imgloader.getImageATLatLon( track.getLat(), track.getLon())
+				if not ((not overwriteExisting) and slitscanner.fileExists()):
+					img = imgloader.getImageATLatLon( track.getLat(), track.getLon())
 				
 			if process_images:
 				
@@ -208,6 +211,21 @@ if __name__ == '__main__':
 						img.size[0]/2, img.size[1]
 						), fill=128 )			
 					del draw
+
+					# visual debug/preview output via opencv
+					if display:					
+						cv_img = cv.CreateImageHeader(rot.size, cv.IPL_DEPTH_8U, 3)
+						cv.SetData(cv_img, rot.tostring())
+						cv.CvtColor(cv_img, cv_img, cv.CV_RGB2BGR)
+						cv.ShowImage("current",cv_img)
+
+						scan_img = slitscanner.getImage()
+						cv_scan_img = cv.CreateImageHeader(scan_img.size, cv.IPL_DEPTH_8U, 3)
+						cv.SetData(cv_scan_img, scan_img.tostring())
+						cv.CvtColor(cv_scan_img, cv_scan_img, cv.CV_RGB2BGR)
+						cv.ShowImage("scan",cv_scan_img)
+
+						cv.WaitKey(10)					
 					
 			elif write_log_files:
 				slitscanner.addButDontScanFrame()
@@ -216,23 +234,8 @@ if __name__ == '__main__':
 				log_file = slitscanner.getFileBaseName()+".log"
 				myutils.createPath(log_file)
 				f = open(log_file,"a")
-				f.write("%f, %f\n" % (track.getLat(), track.getLon()))
+				f.write("%d, %f, %f\n" % (slitscanner.getPixelInScan(), track.getLat(), track.getLon()))
 				f.close()
-
-			# visual debug/preview output via opencv
-			if display:
-				cv_img = cv.CreateImageHeader(rot.size, cv.IPL_DEPTH_8U, 3)
-				cv.SetData(cv_img, rot.tostring())
-				cv.CvtColor(cv_img, cv_img, cv.CV_RGB2BGR)
-				cv.ShowImage("current",cv_img)
-
-				scan_img = slitscanner.getImage()
-				cv_scan_img = cv.CreateImageHeader(scan_img.size, cv.IPL_DEPTH_8U, 3)
-				cv.SetData(cv_scan_img, scan_img.tostring())
-				cv.CvtColor(cv_scan_img, cv_scan_img, cv.CV_RGB2BGR)
-				cv.ShowImage("scan",cv_scan_img)
-
-				cv.WaitKey(10)
 
 	if process_images:		
 		if (not overwriteExisting) and slitscanner.fileExists():
