@@ -83,9 +83,9 @@ class TileLoader:
 					ready = True
 				except KeyboardInterrupt:
 					exit(0)
-				#except:
-				#	print "Unexpected error: %s" % sys.exc_info()[0]
-				#	ready = False
+				except:
+					print "Unexpected error: %s" % sys.exc_info()[0]
+					ready = False
 		return img
 
 	def loadTileSet(self, lat,lon):
