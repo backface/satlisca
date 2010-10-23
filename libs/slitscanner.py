@@ -58,14 +58,13 @@ class SlitScanner:
 			(255,255,255) )
 
 	def getFileName(self):
-		scan_file = "%s/%d/%d/%06d.%s" % \
-			(self.path, self.slitWidth, self.width,
-			self.img_count, self.extensions[self.filetype])
+		scan_file = "%s.%s" % \
+			(self.getFileBaseName(), self.extensions[self.filetype])
 		return scan_file
 
 	def getFileBaseName(self):
-		scan_file = "%s/%d/%d/%06d" % \
-			(self.path, self.slitWidth, self.width,
+		scan_file = "%s/%d/%06d" % \
+			(self.path, self.width,
 			self.img_count)
 		return scan_file
 		
@@ -82,9 +81,7 @@ class SlitScanner:
 			 self.slit_count * self.slitWidth + self.slitWidth, self.height ) )
 			 
 		if (self.slit_count + 1) * self.slitWidth >= self.width:
-			scan_file = "%s/%d/%d/%06d.%s" % \
-				(self.path, self.slitWidth, self.width,
-				self.img_count, self.extensions[self.filetype])
+			scan_file = self.getFileName()
 			myutils.createPath(scan_file)
 			print "saving file:", scan_file
 			if self.filetype == "JPEG":
@@ -104,8 +101,7 @@ class SlitScanner:
 			self.slit_count = 0
 		else:
 			self.frame_count += 1
-			self.slit_count += 1		
-		
+			self.slit_count += 1				
 
 	def getImage(self):
 		return self.scan_img
@@ -117,16 +113,10 @@ class SlitScanner:
 		return (self.img_count - 1)  * self.width + (self.slit_count + 1)
 		
 	def fileExists(self):
-		scan_file = "%s/%d/%d/%06d.%s" % \
-				(self.path, self.slitWidth, self.width,
-				self.img_count, self.extensions[self.filetype])
-		return os.path.exists(scan_file)
+		return os.path.exists(self.getFileName())
 		
 	def saveImage(self):
-		scan_file = "%s/%d/%d/%06d.%s" % \
-				(self.path, self.slitWidth, self.width,
-				self.img_count, self.extensions[self.filetype])
-		myutils.createPath(scan_file)
+		myutils.createPath(self.getFileName())
 		print "saving file:", scan_file
 		self.scan_img.save(scan_file,"JPEG")
 	

@@ -26,7 +26,7 @@ size = (512,512)
 lh = 1
 source = "landsat"
 interval = 20
-zoom = 11
+zoom = 12
 overwriteExisting = False
 output = "scan"
 trackfiles = []
@@ -92,6 +92,8 @@ def process_args():
 			trackfiles.append(a)
 		elif o in ("-z", "--zoom"):
 			zoom = int(a)
+		elif o in ("-l", "--lineheight"):
+			lh = int(a)
 		elif o in ("-s", "--source"):
 			source = a
 		elif o in ("-x", "--width"):
