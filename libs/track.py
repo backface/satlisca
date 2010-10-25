@@ -34,6 +34,7 @@ class TrackWalker:
 		self.points = gpx.getElementsByTagName("trkpt")
 		self.distance = 0
 		self.cur = 0
+		self.interpolated = False
 		self.len = len(self.points)
 
 	def goToNext(self):

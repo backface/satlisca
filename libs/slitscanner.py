@@ -68,6 +68,11 @@ class SlitScanner:
 			self.img_count)
 		return scan_file
 		
+	def getFileDirectory(self):
+		scan_dir = "%s/%d/" % \
+			(self.path, self.width)
+		return scan_dir		
+		
 	def addFrame(self, img):
 		slit = img.crop( (
 			(img.size[0]/2 - self.slitWidth/2),
@@ -81,13 +86,7 @@ class SlitScanner:
 			 self.slit_count * self.slitWidth + self.slitWidth, self.height ) )
 			 
 		if (self.slit_count + 1) * self.slitWidth >= self.width:
-			scan_file = self.getFileName()
-			myutils.createPath(scan_file)
-			print "saving file:", scan_file
-			if self.filetype == "JPEG":
-				self.scan_img.save(scan_file,self.filetype,quality=self.quality)
-			else:
-				self.scan_img.save(scan_file,self.filetype)
+			self.saveImage()
 			self.scan_img = Image.new("RGB",(self.width,self.height),(255,255,255))
 			self.img_count +=1
 			self.slit_count = 0
@@ -116,9 +115,14 @@ class SlitScanner:
 		return os.path.exists(self.getFileName())
 		
 	def saveImage(self):
-		myutils.createPath(self.getFileName())
+		scan_file = self.getFileName()
+		myutils.createPath(scan_file)
 		print "saving file:", scan_file
-		self.scan_img.save(scan_file,"JPEG")
+		if self.filetype == "JPEG":
+			self.scan_img.save(scan_file,self.filetype,quality=self.quality)
+		else:
+			self.scan_img.save(scan_file,self.filetype)
+		self.scan_img = Image.new("RGB",(self.width,self.height),(255,255,255))		
 	
 		
 			

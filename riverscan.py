@@ -103,7 +103,7 @@ def process_args():
 		elif o in ("-n", "--name"):
 			name = a
 		elif o in ("-m", "--interval"):
-			interval = int(a)
+			interval = float(a)
 		elif o in ("-f", "--format"):
 			format = a
 		elif o in ("-w","--overwrite"):
@@ -155,6 +155,12 @@ if __name__ == '__main__':
 	slitscanner.setFileType(format)
 	slitscanner.setPath(scan_path + "/" + source)
 	slitscanner.setSize(size[0],size[1])	
+	
+	if write_log_files:
+		log_file = slitscanner.getFileDirectory()+"scan.log"
+		myutils.createPath(log_file)
+		print log_file
+		f = open(log_file,"w")	
 
 	for trackfile in trackfiles:
 		
@@ -233,14 +239,11 @@ if __name__ == '__main__':
 				slitscanner.addButDontScanFrame()
 
 			if write_log_files:
-				log_file = slitscanner.getFileBaseName()+".log"
-				myutils.createPath(log_file)
-				f = open(log_file,"a")
 				f.write("%d, %f, %f\n" % (slitscanner.getPixelInScan(), track.getLat(), track.getLon()))
-				f.close()
 
 	if process_images:		
-		if (not overwriteExisting) and slitscanner.fileExists():
-			slitscanner.addButDontScanFrame()		
-		else:
+		if not (not overwriteExisting) and slitscanner.fileExists():
 			slitscanner.saveImage()
+			
+	if write_log_files:
+		f.close()			
