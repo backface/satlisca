@@ -71,6 +71,7 @@ class TileLoader:
 			while not ready:
 				try:
 					print "download", filecache, "to cache..."
+					#print url
 					tmp = urllib.urlretrieve(url)
 					img = Image.open(tmp[0]);
 					if self.source == "landsat":

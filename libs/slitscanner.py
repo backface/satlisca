@@ -18,7 +18,7 @@ class SlitScanner:
 
 	def __init__(self, width=2):
 		self.slitWidth = width
-		self.path = "scan"
+		self.path = "scan-data"
 		self.width = 512
 		self.height  = 512
 		self.scan_img = Image.new( \
@@ -95,7 +95,7 @@ class SlitScanner:
 			self.slit_count += 1
 
 	def addButDontScanFrame(self):
-		if self.slit_count * self.slitWidth > self.width:
+		if (self.slit_count + 1) * self.slitWidth >= self.width:
 			self.img_count +=1
 			self.slit_count = 0
 		else:
