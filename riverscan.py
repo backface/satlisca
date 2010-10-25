@@ -246,10 +246,15 @@ if __name__ == '__main__':
 						track.getLat(), 
 						track.getLon(),
 						track.getDistance()/1000))
-
-		if process_images:		
-			if not ((not overwriteExisting) and slitscanner.fileExists()):
-				slitscanner.saveImage()
 			
-		if write_log_files:
-			f.close()			
+		#track is finished - print info again		
+		print "%0.2f%%, #%06d, %0.6f, %0.6f, bearing: %0.3f, distance: %0.0fm, total: %0.1fkm     \r" % \
+		( 	percent, track.getPointId(), track.getLat(), track.getLon(), \
+			track.getBearing(), track.getDistanceToLast(), track.getDistance()/1000 )					
+
+	if process_images:		
+		if not ((not overwriteExisting) and slitscanner.fileExists()):
+			slitscanner.saveImage()
+			
+	if write_log_files:
+		f.close()			
