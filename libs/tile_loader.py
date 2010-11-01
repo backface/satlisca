@@ -33,6 +33,11 @@ class TileLoader:
 			"JPEG":"jpg",
 			"TIFF":"tif" }
 		self.quality = 98
+		self.ulx = 0
+		self.uly = 0
+		self.lrx = 0
+		self.lry = 0
+		self.bounds = 0,0,0,0
 		
 	def setSize(self, w, h):
 		self.w = w
@@ -92,7 +97,7 @@ class TileLoader:
 		size = self.tileSize + 2 * self.tileSize * self.surround
 
 		img = Image.new("RGB",(size, size))
-		
+
 		tx, ty = tilenames.tileXY(lat, lon, self.zoom)
 		i = 0
 		for x in range(tx - self.surround, tx + self.surround +1 ):
@@ -102,6 +107,13 @@ class TileLoader:
 				img.paste(tile,(i*self.tileSize, j*self.tileSize))
 				j += 1
 			i += 1
+
+		#tmp, lry = tilenames.latEdges(ty + self.surround + 1, self.zoom);
+		#uly, tmp = tilenames.latEdges(ty - self.surround, self.zoom);
+		#ulx, tmp = tilenames.lonEdges(tx - self.surround, self.zoom);
+		#tmp, lrx= tilenames.lonEdges(tx + self.surround + 1, self.zoom);
+		#self.bounds = ulx, uly, lrx, lry
+		#print self.bounds
 		return img
 
 	def getImageATLatLon(self, lat,lon):
@@ -119,7 +131,25 @@ class TileLoader:
 			int(sx/2 - tsx/2 - offx), int(sy/2 - tsy/2 - offy) , \
 			int(sx/2 + tsx/2 - offx), int(sy/2 + tsy/2 - offy)
 			))
+
+		# get bounds (seems to be slightly off!)
+		x,y = tilenames.latlon2xy(lat,lon, self.zoom)
+		print tilenames.xy2latlon(x,y,self.zoom)
+		ul_lat, ul_lon = tilenames.xy2latlon(x - (tsx/2+ offx)/self.tileSize,
+			y - (tsy/2+ offy)/self.tileSize,
+			self.zoom)
+		lr_lat, lr_lon = tilenames.xy2latlon(x + (tsx/2+ offx)/self.tileSize,
+			y + (tsy/2+ offy)/self.tileSize,
+			self.zoom)
+		self.bounds = ul_lon, ul_lat, lr_lon, lr_lat
+		print self.bounds
+
 		return cropped
+
+	def getBounds(self, lat,lon):
+		return self.bounds
+
+		
 	
 
 if __name__ == '__main__':

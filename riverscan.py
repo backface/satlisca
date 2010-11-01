@@ -103,7 +103,7 @@ def process_args():
 		elif o in ("-n", "--name"):
 			name = a
 		elif o in ("-m", "--interval"):
-			interval = int(a)
+			interval = float(a)
 		elif o in ("-f", "--format"):
 			format = a
 		elif o in ("-w","--overwrite"):
