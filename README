@@ -1,0 +1,5 @@
+slitscan over satellite imaginary along a (spline interpolated) gps-track (GPX File)
+
+TODO:
+	* add reprojection for equal distance /area
+	  Lambert Azimuthal Equal Area?
