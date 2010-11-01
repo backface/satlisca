@@ -15,7 +15,7 @@ import tilenames
 import myutils
 from PIL import Image
 import urllib
-import sys
+import sys, time
 
 class TileLoader:
 	def __init__(self):
@@ -86,6 +86,7 @@ class TileLoader:
 					exit(0)
 				except:
 					print "Unexpected error: %s" % sys.exc_info()[0]
+					time.sleep(1)
 					ready = False
 		return img
 
