@@ -34,6 +34,7 @@ class TrackWalker:
 		self.points = gpx.getElementsByTagName("trkpt")
 		self.distance = 0
 		self.cur = 0
+		self.interpolated = False
 		self.len = len(self.points)
 
 	def goToNext(self):
@@ -126,7 +127,7 @@ class TrackWalker:
 		if self.hasPrev():
 			lat, lon = self.getPoint()
 			prev_lat, prev_lon = self.getPrevPoint()
-			dist = mygeo.getDistance(prev_lat, prev_lon, lat, lon)
+			dist = mygeo.getDistGeod(prev_lat, prev_lon, lat, lon)
 			return dist
 		else:
 			return 0
@@ -147,7 +148,7 @@ class TrackWalker:
 		
 		for i in range(1,self.len):
 			lat, lon  = self.getPointAt(i)
-			dist = mygeo.getDistance(lat, lon, last_lat, last_lon)
+			dist = mygeo.getDistGeod(lat, lon, last_lat, last_lon)
 			totaldist += dist				
 			last_lat = lat
 			last_lon = lon	
@@ -185,6 +186,7 @@ class TrackWalker:
 		self.interpolated = True
 		self.len = len(self.points)
 		self.rewind()
+
 
 if __name__ == '__main__':
 	track = Track()

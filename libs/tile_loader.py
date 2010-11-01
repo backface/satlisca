@@ -15,7 +15,7 @@ import tilenames
 import myutils
 from PIL import Image
 import urllib
-import sys
+import sys, time
 
 class TileLoader:
 	def __init__(self):
@@ -76,6 +76,7 @@ class TileLoader:
 			while not ready:
 				try:
 					print "download", filecache, "to cache..."
+					#print url
 					tmp = urllib.urlretrieve(url)
 					img = Image.open(tmp[0]);
 					if self.source == "landsat":
@@ -90,6 +91,7 @@ class TileLoader:
 					exit(0)
 				except:
 					print "Unexpected error: %s" % sys.exc_info()[0]
+					time.sleep(1)
 					ready = False
 		return img
 

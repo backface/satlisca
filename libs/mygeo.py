@@ -128,3 +128,9 @@ def getDistance_old(lat1,lon1,lat2,lon2):
 		return dist
 	else:
 		return 0
+
+def getDistGeod(lat1,lon1,lat2,lon2):
+	from pyproj import Geod
+	g = Geod(ellps='clrk66')
+	az12, az21, dist = g.inv(lon1,lat1,lon2,lat2)
+	return dist

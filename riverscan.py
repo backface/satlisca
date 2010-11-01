@@ -28,7 +28,7 @@ source = "landsat"
 interval = 20
 zoom = 12
 overwriteExisting = False
-output = "scan"
+output = "scan-data"
 trackfiles = []
 display = True
 format = "JPEG"
@@ -155,25 +155,33 @@ if __name__ == '__main__':
 	slitscanner.setFileType(format)
 	slitscanner.setPath(scan_path + "/" + source)
 	slitscanner.setSize(size[0],size[1])	
+	
+	if write_log_files:
+		log_file = slitscanner.getFileDirectory()+"scan.log"
+		myutils.createPath(log_file)
+		print "log to:", log_file
+		f = open(log_file,"w")	
 
 	for trackfile in trackfiles:
 		
 		print "loading track", trackfile
 		track.load(trackfile)
-		print "track points: %d, length: %0.2fkm" %( track.getPointNumber(),track.getTotalDistance())
+		print "track points: %d, length: %0.2fkm" % \
+			( track.getPointNumber(),track.getTotalDistance())
 	
 		if interval > 0:
 			print "interpolating points at",interval,"meters ..."
 			track.interpolate(interval,True)
-			print "track points: %d, length: %0.2fkm" %( track.getPointNumber(),track.getTotalDistance())
+			print "track points: %d, length: %0.2fkm" % \
+				( track.getPointNumber(),track.getTotalDistance())
 		
 		while track.goToNext():
 		
 			percent = float(track.getPointId()) / float(track.getPointNumber()) * 100
 			
-			print "%0.2f%%, #%06d, %0.6f, %0.6f, bearing: %0.3f, distance: %0.0fm, total: %0.1fkm" % \
+			print "%0.2f%%, #%06d, %0.6f, %0.6f, bearing: %0.3f, distance: %0.0fm, total: %0.1fkm     \r" % \
 			( 	percent, track.getPointId(), track.getLat(), track.getLon(), \
-				track.getBearing(), track.getDistanceToLast(), track.getDistance()/1000 )
+				track.getBearing(), track.getDistanceToLast(), track.getDistance()/1000 ),
 
 			if cache_only or process_images:
 				if not ((not overwriteExisting) and slitscanner.fileExists()):
@@ -231,16 +239,22 @@ if __name__ == '__main__':
 					
 			elif write_log_files:
 				slitscanner.addButDontScanFrame()
-
+				
 			if write_log_files:
-				log_file = slitscanner.getFileBaseName()+".log"
-				myutils.createPath(log_file)
-				f = open(log_file,"a")
-				f.write("%d, %f, %f\n" % (slitscanner.getPixelInScan(), track.getLat(), track.getLon()))
-				f.close()
+				f.write("%d, %f, %f, %f\n" % \
+					(slitscanner.getPixelInScan(), 
+						track.getLat(), 
+						track.getLon(),
+						track.getDistance()/1000))
+			
+		#track is finished - print info again		
+		print "%0.2f%%, #%06d, %0.6f, %0.6f, bearing: %0.3f, distance: %0.0fm, total: %0.1fkm     \r" % \
+		( 	percent, track.getPointId(), track.getLat(), track.getLon(), \
+			track.getBearing(), track.getDistanceToLast(), track.getDistance()/1000 )					
 
 	if process_images:		
-		if (not overwriteExisting) and slitscanner.fileExists():
-			slitscanner.addButDontScanFrame()		
-		else:
+		if not ((not overwriteExisting) and slitscanner.fileExists()):
 			slitscanner.saveImage()
+			
+	if write_log_files:
+		f.close()			
